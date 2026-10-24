@@ -10,7 +10,8 @@ export async function createOrder({ user, seriesId, telegramChatId = null, teleg
   if (!series) throw Object.assign(new Error('Series is unavailable'), { status: 404 });
   const token = randomBytes(32).toString('base64url');
   const id = randomUUID();
-  const noteAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  // Avoid characters OCR commonly confuses: zero and the letter O.
+  const noteAlphabet = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
   const noteSuffix = Array.from({ length: 14 }, () =>
     noteAlphabet[randomInt(noteAlphabet.length)]
   ).join('');
