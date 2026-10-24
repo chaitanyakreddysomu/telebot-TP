@@ -23,7 +23,8 @@ app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], 
 app.use(express.static(fileURLToPath(new URL('../public', import.meta.url)), { maxAge: 0 }));
 app.use(express.json({ limit: '32kb' }));
 const apiLimit = rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: true, legacyHeaders: false });
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: env.MAX_PROOF_FILE_SIZE_MB * 1024 * 1024, files: 1 },
+const maxProofFileSizeMb = process.env.VERCEL ? Math.min(env.MAX_PROOF_FILE_SIZE_MB, 4) : env.MAX_PROOF_FILE_SIZE_MB;
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: maxProofFileSizeMb * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, cb) => cb(null, ['image/jpeg', 'image/png'].includes(file.mimetype)) });
 const checkoutPath = token => `/checkout/${encodeURIComponent(token)}`;
 app.get('/health', (_req, res) => res.json({ ok: true }));
@@ -62,7 +63,7 @@ app.get('/checkout/:token', async (req, res, next) => {
     }
     const series = order.series || {};
     const uri = createUpiUri(order, series); const qr = await makeQrDataUrl(uri);
-    res.render('checkout', { order, series, qr, uri, amount: formatRupees(order.amount_paise), maxMb: env.MAX_PROOF_FILE_SIZE_MB });
+    res.render('checkout', { order, series, qr, uri, amount: formatRupees(order.amount_paise), maxMb: maxProofFileSizeMb });
   } catch (e) { next(e); }
 });
 app.post('/api/checkout/:token/proof', apiLimit, upload.single('proof'), async (req, res, next) => {
@@ -148,6 +149,15 @@ app.post('/api/internal/deliver/:orderId', async (req, res, next) => {
   if (req.get('authorization') !== `Bearer ${env.INTERNAL_API_SECRET}`) return res.sendStatus(401);
   try { res.json(await deliverOrder(req.params.orderId)); } catch (e) { next(e); }
 });
+app.post('/api/internal/register-telegram-webhook', async (req, res, next) => {
+  if (req.get('authorization') !== `Bearer ${env.INTERNAL_API_SECRET}`) return res.sendStatus(401);
+  if (!env.TELEGRAM_WEBHOOK_SECRET) return res.status(400).json({ error: 'Set TELEGRAM_WEBHOOK_SECRET before registering the webhook.' });
+  try {
+    const webhookUrl = `${env.BASE_URL.replace(/\/$/, '')}/telegram/webhook`;
+    await bot.telegram.setWebhook(webhookUrl, { secret_token: env.TELEGRAM_WEBHOOK_SECRET });
+    res.json({ ok: true, webhookUrl });
+  } catch (e) { next(e); }
+});
 app.post('/telegram/webhook', async (req, res) => {
   if (!env.TELEGRAM_WEBHOOK_SECRET || req.get('x-telegram-bot-api-secret-token') !== env.TELEGRAM_WEBHOOK_SECRET) return res.sendStatus(401);
   try { await bot.handleUpdate(req.body); res.sendStatus(200); } catch { res.sendStatus(500); }
@@ -155,3 +165,4 @@ app.post('/telegram/webhook', async (req, res) => {
 app.get('/checkout/:token/status-page', (_req, res) => res.json({ ok: true }));
 app.use((err, _req, res, _next) => { console.error('Request failed:', err.message); res.status(err.status || 500).json({ error: err.status ? err.message : 'Internal server error' }); });
 export { app };
+export default app;

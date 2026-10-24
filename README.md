@@ -10,6 +10,10 @@ This is a single Node.js/Express application with a Telegraf bot, Supabase catal
 4. Review and apply `supabase/migrations/001_payment_backend.sql` in Supabase. For an existing installation, also apply `supabase/migrations/002_telegram_checkout_message.sql` and `supabase/migrations/003_payments_history.sql`. The history migration adds an order reference to `payments` so verified purchases are recorded once, and neither migration changes the existing `seriesList` table.
 5. Start with `npm start`. For local polling, leave `TELEGRAM_WEBHOOK_SECRET` empty. For webhook deployments, set it and configure Telegram's webhook to `/telegram/webhook` with the same secret.
 
+### Vercel deployment
+
+Vercel runs the Express app as a serverless function, so deploy `src/app.js` (which exports the app as default) rather than starting `src/server.js`. Set `BASE_URL` to the production Vercel URL and set a random `TELEGRAM_WEBHOOK_SECRET`. After deployment, register Telegram's webhook once by sending `POST https://<your-domain>/api/internal/register-telegram-webhook` with `Authorization: Bearer <INTERNAL_API_SECRET>`. Keep only one deployment configured to receive Telegram updates. Vercel limits function request bodies to 4.5 MB, so receipt uploads are capped at 4 MB on Vercel even if `MAX_PROOF_FILE_SIZE_MB` is higher.
+
 Receipt OCR uses OCR.space Engine 2. The app accepts the existing `.env` key name `ocr_space_API` (or `OCR_SPACE_API_KEY`). OCR.space receives the image from the server; the API key is never sent to the browser. Upload JPEG or PNG. OCR.space currently lists a 1 MB image limit for its free plan and 5 MB for PRO, so the usable upload limit depends on the API key's plan.
 
 The catalogue reader maps the existing `seriesList` fields (`series_name`, `platform`, `duration`, `price`, `channel_id`, `is_active`) used by the supplied Python bot. `price` is treated as rupees. Set `SUPABASE_SERIES_TABLE` if your existing table has another name. If your table uses different columns, adjust `src/services/series.service.js` to match it.
