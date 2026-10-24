@@ -43,5 +43,18 @@ export async function deliverOrder(orderId) {
     telegram_message_id: messageId, status: 'delivered', delivered_at: new Date().toISOString() }).eq('order_id', order.id).select().single();
   if (updateError) throw updateError;
   await supabase.from('payment_orders').update({ status: 'delivered', updated_at: new Date().toISOString() }).eq('id', order.id);
+
+  if (env.TELEGRAM_ADMIN_ID) {
+    const adminText = `✅ Payment successful\n\nUser name: ${order.telegram_first_name || order.telegram_username || 'Not available'}\nSeries name: ${seriesName}\nPrice: ${formatRupees(order.amount_paise)}`;
+    try {
+      await bot.telegram.sendMessage(env.TELEGRAM_ADMIN_ID, adminText);
+    } catch (adminError) {
+      console.error('[Telegram admin payment notification failed]', {
+        orderId: order.id,
+        error: adminError.message,
+      });
+    }
+  }
+
   return data;
 }
