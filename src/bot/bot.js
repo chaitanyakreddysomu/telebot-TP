@@ -65,7 +65,7 @@ bot.start(async ctx => {
     return;
   }
 
-  await ctx.reply(`Usage: https://t.me/+hVshgnJlzPs3Njhl\n\nDon't know how to use the bot? Open the usage channel above and watch the video.\n\nWelcome, ${ctx.from.first_name || 'there'}!\n\nSelect Pocket FM below for the series list.`,
+  await ctx.reply(`Welcome, ${ctx.from.first_name || 'there'}!\n\nSelect Pocket FM below for the series list.\n\n\n Dont know how to use? watch video => https://t.me/+hVshgnJlzPs3Njhl`,
     Markup.inlineKeyboard([[Markup.button.callback('Pocket FM', 'page:0')]]));
 });
 
