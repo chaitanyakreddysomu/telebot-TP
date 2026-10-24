@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#121416">
+  <title><%= title %></title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      display: grid;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      place-items: center;
+      color: #f0f1f2;
+      background: #121416;
+      font: 15px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(100%, 520px);
+      padding: 34px;
+      border: 1px solid #34383b;
+      border-radius: 20px;
+      background: #1b1e21;
+      box-shadow: 0 20px 60px rgba(0,0,0,.22);
+    }
+    .icon {
+      display: grid;
+      width: 58px;
+      height: 58px;
+      margin-bottom: 22px;
+      place-items: center;
+      border: 1px solid #564d40;
+      border-radius: 17px;
+      color: #d8c7a5;
+      background: #2a2823;
+      font-size: 25px;
+    }
+    h1 { margin: 0; font-size: clamp(25px, 5vw, 32px); line-height: 1.2; letter-spacing: -.7px; }
+    .message { margin: 12px 0 0; color: #b4b8bc; }
+    .order-details {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px 16px;
+      margin-top: 25px;
+      padding: 17px;
+      border: 1px solid #363a3d;
+      border-radius: 14px;
+      background: #202326;
+      font-size: 13px;
+    }
+    .label { color: #a3a8ae; }
+    .value { text-align: right; overflow-wrap: anywhere; }
+    .next-step {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid #34383b;
+      color: #d4d6d8;
+      font-size: 14px;
+    }
+    .start-command {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 10px;
+      border: 1px solid #50545a;
+      border-radius: 8px;
+      color: #e5e6e8;
+      background: #292c30;
+      font: 600 13px ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    @media (max-width: 420px) { main { padding: 26px 21px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="icon" aria-hidden="true"><%= expired ? '⌛' : '!' %></div>
+    <h1><%= title %></h1>
+    <p class="message"><%= message %></p>
+    <% if (expired && seriesName) { %>
+      <section class="order-details" aria-label="Expired order details">
+        <span class="label">Series name</span><strong class="value"><%= seriesName %></strong>
+        <span class="label">Platform</span><strong class="value"><%= platform %></strong>
+        <span class="label">Episodes</span><strong class="value"><%= episodes %></strong>
+        <span class="label">Price</span><strong class="value"><%= amount %></strong>
+      </section>
+      <div class="next-step">To create a new payment link, open the Telegram bot and send<br><span class="start-command">/start</span></div>
+    <% } %>
+  </main>
+</body>
+</html>
