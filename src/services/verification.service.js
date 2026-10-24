@@ -6,11 +6,13 @@ export async function reviewReceipt(order, receipt, storagePath) {
     .trim()
     .toLocaleUpperCase('en-IN')
     .replace(/[^A-Z0-9]/g, '');
+  const normalizeTransactionNote = value => normalize(value).replace(/O/g, '0');
 
   const checks = {
     transactionNoteMatched: Boolean(
       receipt.transactionNote &&
-      normalize(receipt.transactionNote) === normalize(order.transaction_note)
+      normalizeTransactionNote(receipt.transactionNote) ===
+        normalizeTransactionNote(order.transaction_note)
     ),
     amountMatched: receipt.amountPaise != null &&
       Number(receipt.amountPaise) === Number(order.amount_paise),

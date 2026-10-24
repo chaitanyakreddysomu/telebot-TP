@@ -172,9 +172,11 @@ function extractTransactionId(text) {
 }
 
 function extractTransactionNote(text) {
+  // Notes use letters and digits; OCR may confuse O with 0, so canonicalize
+  // that character pair for the extracted value.
   return String(text || '').match(
-    /\bPFM-[A-F0-9]{14}\b/i
-  )?.[0]?.toUpperCase() || null;
+    /\bPFM-[A-Z0-9]{14}\b/i
+  )?.[0]?.toUpperCase().replace(/O/g, '0') || null;
 }
 
 function extractPayeeName(text) {
@@ -330,7 +332,7 @@ async function recognizeWithOcrSpace(buffer, mimeType, expectedAmountPaise) {
 
   const hasExpectedAmount = text => expectedAmountPaise != null &&
     extractAmountCandidates(text).some(candidate => candidate.paise === Number(expectedAmountPaise));
-  const isComplete = text => /\bPFM-[A-F0-9]{14}\b/i.test(text) &&
+  const isComplete = text => /\bPFM-[A-Z0-9]{14}\b/i.test(text) &&
     hasExpectedAmount(text) && hasPaymentSuccessText(text) &&
     /(?:UTR|UPI\s*Ref(?:erence)?(?:\s*No)?|Transaction\s*ID|Txn\s*ID)\s*[:#-]?\s*[A-Z0-9]{8,24}/i.test(text);
 
@@ -345,7 +347,7 @@ async function recognizeWithOcrSpace(buffer, mimeType, expectedAmountPaise) {
   }
   if (!firstPass) return secondPass;
 
-  const score = text => Number(/\bPFM-[A-F0-9]{14}\b/i.test(text)) +
+  const score = text => Number(/\bPFM-[A-Z0-9]{14}\b/i.test(text)) +
     Number(hasExpectedAmount(text)) + Number(hasPaymentSuccessText(text)) +
     Number(/(?:UTR|UPI\s*Ref(?:erence)?(?:\s*No)?|Transaction\s*ID|Txn\s*ID)\s*[:#-]?\s*[A-Z0-9]{8,24}/i.test(text));
   return score(secondPass.text) > score(firstPass.text) ? secondPass : firstPass;

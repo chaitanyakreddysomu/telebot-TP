@@ -10,7 +10,11 @@ export async function createOrder({ user, seriesId, telegramChatId = null, teleg
   if (!series) throw Object.assign(new Error('Series is unavailable'), { status: 404 });
   const token = randomBytes(32).toString('base64url');
   const id = randomUUID();
-  const note = `PFM-${randomBytes(7).toString('hex').toUpperCase()}`;
+  const noteAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const noteSuffix = Array.from({ length: 14 }, () =>
+    noteAlphabet[randomInt(noteAlphabet.length)]
+  ).join('');
+  const note = `PFM-${noteSuffix}`;
   // Add ₹0.01–₹0.50 so OCR can distinguish visually similar receipts.
   const amountPaise = series.pricePaise + randomInt(1, 51);
   const expiresAt = new Date(Date.now() + CHECKOUT_LINK_EXPIRY_MINUTES * 60_000).toISOString();
